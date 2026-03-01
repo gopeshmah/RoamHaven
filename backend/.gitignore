@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Firebase Service Account Key (NEVER upload this!)
+config/serviceAccountKey.json
+
+# Uploaded files
+uploads/

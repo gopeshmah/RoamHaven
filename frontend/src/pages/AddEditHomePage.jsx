@@ -9,7 +9,7 @@ const AddEditHomePage = () => {
   const navigate = useNavigate();
   const isEditing = !!homeId;
 
-  const [formData, setFormData] = useState({ houseName: "", price: "", location: "", rating: "", description: "" });
+  const [formData, setFormData] = useState({ houseName: "", price: "", location: "", description: "" });
   const [coordinates, setCoordinates] = useState({ lat: 28.6139, lng: 77.2090 }); // Default to New Delhi
   const [searchQuery, setSearchQuery] = useState("");
   const [photos, setPhotos] = useState([]); // Array of File objects for newly selected photos
@@ -23,7 +23,7 @@ const AddEditHomePage = () => {
       API.get(`/homes/${homeId}`)
         .then((res) => {
           const h = res.data.home;
-          setFormData({ houseName: h.houseName, price: h.price, location: h.location, rating: h.rating, description: h.description || "" });
+          setFormData({ houseName: h.houseName, price: h.price, location: h.location, description: h.description || "" });
           if (h.coordinates?.lat && h.coordinates?.lng) {
             setCoordinates(h.coordinates);
             if (mapRef.current) mapRef.current.setView([h.coordinates.lat, h.coordinates.lng], 13);
@@ -186,15 +186,9 @@ const AddEditHomePage = () => {
               <input type="text" name="houseName" value={formData.houseName} onChange={handleChange} placeholder="Cozy Mountain Cabin" className="w-full px-4 py-3 rounded-xl input-field" required />
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Price / Night (₹)</label>
-                <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="2500" className="w-full px-4 py-3 rounded-xl input-field" required />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Rating (1-5)</label>
-                <input type="number" name="rating" value={formData.rating} onChange={handleChange} placeholder="4.5" min="1" max="5" step="0.1" className="w-full px-4 py-3 rounded-xl input-field" required />
-              </div>
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Price / Night (₹)</label>
+              <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="2500" className="w-full px-4 py-3 rounded-xl input-field" required />
             </div>
 
             <div className="mb-4">

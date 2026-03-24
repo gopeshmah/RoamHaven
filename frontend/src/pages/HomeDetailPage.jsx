@@ -16,6 +16,13 @@ const HomeDetailPage = () => {
   const [checkOut, setCheckOut] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   
+  // Review state
+  const [reviews, setReviews] = useState([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  
   const { isLoggedIn } = useAuth();
 
   // Calculate total price based on dates
@@ -27,6 +34,10 @@ const HomeDetailPage = () => {
       .then((res) => setHome(res.data.home))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    API.get(`/reviews/${homeId}`)
+      .then((res) => setReviews(res.data))
+      .catch((err) => console.error("Failed to load reviews:", err));
   }, [homeId]);
 
   const handleAddFavourite = async () => {
@@ -72,6 +83,43 @@ const HomeDetailPage = () => {
       alert(err.response?.data?.message || "Failed to create booking");
     } finally {
       setBookingLoading(false);
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      alert("Please login to leave a review.");
+      navigate("/login");
+      return;
+    }
+    
+    setSubmittingReview(true);
+    try {
+      const res = await API.post("/reviews", {
+        homeId,
+        rating: reviewRating,
+        comment: reviewComment
+      });
+      alert("Review submitted successfully!");
+      
+      // Fetch fresh reviews to get the populated user data
+      const refreshRes = await API.get(`/reviews/${homeId}`);
+      setReviews(refreshRes.data);
+      
+      setReviewComment("");
+      setReviewRating(5);
+      setShowReviewForm(false);
+      
+      // Update local home rating
+      if(home) {
+         const newAvg = ((home.rating * reviews.length) + reviewRating) / (reviews.length + 1);
+         setHome({...home, rating: newAvg.toFixed(1) });
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -179,6 +227,97 @@ const HomeDetailPage = () => {
                 </div>
               </div>
             )}
+            
+            {/* Reviews Section */}
+            <div className="mb-8 pt-8 border-t border-gray-200">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-amber-500"><path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" /></svg>
+                  {home.rating ? Number(home.rating).toFixed(1) : "New"} · {reviews.length} {reviews.length === 1 ? 'Review' : 'Reviews'}
+                </h3>
+                {isLoggedIn && !showReviewForm && (
+                  <button onClick={() => setShowReviewForm(true)} className="text-teal-600 font-medium hover:underline">
+                    Write a Review
+                  </button>
+                )}
+              </div>
+
+              {/* Review Form */}
+              {showReviewForm && (
+                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-8 animate-fade-in-up">
+                  <div className="flex justify-between items-center mb-4">
+                     <h4 className="font-semibold text-gray-900">Your Review</h4>
+                     <button onClick={() => setShowReviewForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                  </div>
+                  <form onSubmit={handleReviewSubmit}>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                      <select 
+                        value={reviewRating} 
+                        onChange={(e) => setReviewRating(Number(e.target.value))}
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                      >
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Okay</option>
+                        <option value="2">2 - Poor</option>
+                        <option value="1">1 - Terrible</option>
+                      </select>
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
+                      <textarea 
+                        required
+                        rows="3"
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder="Share your experience staying here..."
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <button 
+                        type="submit" 
+                        disabled={submittingReview}
+                        className="btn-primary px-6 py-2 rounded-xl font-medium disabled:opacity-50 flex items-center justify-center"
+                      >
+                        {submittingReview ? "Submitting..." : "Submit Review"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Reviews List */}
+              <div className="space-y-6">
+                {reviews.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center font-bold text-lg">
+                            {review.guestId?.firstName?.charAt(0) || "U"}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{review.guestId?.firstName} {review.guestId?.lastName}</p>
+                            <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center mb-2 text-amber-500 text-sm">
+                          {Array.from({ length: review.rating }).map((_, i) => (
+                             <svg key={i} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" /></svg>
+                          ))}
+                        </div>
+                        <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">No reviews yet. Be the first to review if you've stayed here!</p>
+                )}
+              </div>
+            </div>
+            
           </div>
 
           {/* Sticky Booking/Price Card */}

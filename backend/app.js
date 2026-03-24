@@ -10,6 +10,7 @@ const homeRoutes = require("./routes/homeRoutes");
 const hostRoutes = require("./routes/hostRoutes");
 const favouriteRoutes = require("./routes/favouriteRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/homes", homeRoutes);
 app.use("/api/host", hostRoutes);
 app.use("/api/favourites", favouriteRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // 404 handler for API
 app.use((req, res) => {

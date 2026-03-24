@@ -24,7 +24,7 @@ exports.getHostHomes = async (req, res) => {
 };
 
 exports.addHome = async (req, res) => {
-  const { houseName, price, location, rating, description } = req.body;
+  const { houseName, price, location, description } = req.body;
   
   // Parse coordinates if they exist (sent as JSON string from React FormData)
   let coordinates = {};
@@ -48,7 +48,7 @@ exports.addHome = async (req, res) => {
       price,
       location,
       coordinates,
-      rating,
+      rating: 0, // Default to 0 for a new home
       photos,
       description,
       host: req.user.id,
@@ -61,7 +61,7 @@ exports.addHome = async (req, res) => {
 };
 
 exports.editHome = async (req, res) => {
-  const { houseName, price, location, rating, description, existingPhotos } = req.body;
+  const { houseName, price, location, description, existingPhotos } = req.body;
   const homeId = req.params.homeId;
   
   // Parse coordinates if they exist
@@ -86,7 +86,6 @@ exports.editHome = async (req, res) => {
     if (Object.keys(coordinates).length > 0) {
       home.coordinates = coordinates;
     }
-    home.rating = rating;
     home.description = description;
 
     // existingPhotos from frontend might be a string (if 1) or array (if multiple)

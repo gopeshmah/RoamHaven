@@ -38,7 +38,7 @@ exports.getAllHomes = async (req, res) => {
 
 exports.getHomeById = async (req, res) => {
   try {
-    const home = await Home.findById(req.params.homeId);
+    const home = await Home.findById(req.params.homeId).populate("host", "firstName lastName photo");
     if (!home) {
       return res.status(404).json({ message: "Home not found" });
     }

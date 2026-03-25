@@ -23,7 +23,7 @@ const HomeDetailPage = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
   // Calculate total price based on dates
   const nights = checkIn && checkOut ? differenceInDays(checkOut, checkIn) : 0;
@@ -204,7 +204,34 @@ const HomeDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="mb-8 pt-8 border-t border-gray-200">
+            
+            {/* Host Profile */}
+            {home.host && (
+              <div className="mb-8 flex items-center justify-between pb-8 border-b border-gray-200">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center font-bold text-xl border border-gray-200 shadow-sm">
+                    {home.host.firstName?.charAt(0) || "H"}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-lg">Hosted by {home.host.firstName} {home.host.lastName}</h3>
+                    <p className="text-sm text-gray-500">Superhost · Joined in 2024</p>
+                  </div>
+                </div>
+                {user && user._id !== home.host._id && (
+                  <button 
+                    onClick={() => navigate("/inbox", { 
+                      state: { newChat: { home: home, otherUser: home.host } } 
+                    })}
+                    className="py-2.5 px-5 bg-white text-teal-700 font-semibold rounded-xl border border-teal-200 hover:bg-teal-50 transition-colors flex items-center gap-2 shadow-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M10 2c-5.523 0-10 4.029-10 9a8.68 8.68 0 004.28 7.37.75.75 0 01.352.68 5.766 5.766 0 01-.634 2.87.75.75 0 00.999 1.002 8.356 8.356 0 003.535-2.605 9.873 9.873 0 001.468.083c5.523 0 10-4.029 10-9s-4.477-9-10-9zm0 5.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm-4.5 1.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm9 0a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" /></svg>
+                    Contact Host
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="mb-8">
               <h3 className="text-2xl font-semibold text-gray-900 mb-4">About this stay</h3>
               <p className="text-gray-600 leading-relaxed text-lg">{home.description || "A beautiful and cozy stay waiting for you to explore. Perfect for travelers looking for comfort and adventure."}</p>
             </div>

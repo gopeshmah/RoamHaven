@@ -1,5 +1,6 @@
 const path = require("path");
 const express = require("express");
+const http = require("http");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
@@ -11,8 +12,14 @@ const hostRoutes = require("./routes/hostRoutes");
 const favouriteRoutes = require("./routes/favouriteRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 
 const app = express();
+const server = http.createServer(app);
+
+// Setup Socket.io
+const setupSocket = require("./socket");
+const io = setupSocket(server);
 
 // CORS - allow React dev server
 app.use(
@@ -42,6 +49,7 @@ app.use("/api/host", hostRoutes);
 app.use("/api/favourites", favouriteRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/messages", messageRoutes);
 
 // 404 handler for API
 app.use((req, res) => {
@@ -55,7 +63,7 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("Connected to MongoDB");
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Backend server running on http://localhost:${PORT}`);
     });
   })

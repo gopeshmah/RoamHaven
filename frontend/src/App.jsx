@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage";
@@ -17,12 +18,14 @@ import NotFoundPage from "./pages/NotFoundPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import PaymentCancelPage from "./pages/PaymentCancelPage";
+import InboxPage from "./pages/InboxPage";
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
+      <SocketProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
           <Navbar />
           <Routes>
             {/* Public Routes */}
@@ -46,11 +49,15 @@ function App() {
             <Route path="/host/add-home" element={<ProtectedRoute><AddEditHomePage /></ProtectedRoute>} />
             <Route path="/host/edit-home/:homeId" element={<ProtectedRoute><AddEditHomePage /></ProtectedRoute>} />
 
+            {/* Chat Inbox */}
+            <Route path="/inbox" element={<ProtectedRoute><InboxPage /></ProtectedRoute>} />
+
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
       </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 }

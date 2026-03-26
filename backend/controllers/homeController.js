@@ -1,6 +1,7 @@
 const Home = require("../models/home");
+const AppError = require("../utils/AppError");
 
-exports.getAllHomes = async (req, res) => {
+exports.getAllHomes = async (req, res, next) => {
   try {
     const { search, minPrice, maxPrice, minRating, location } = req.query;
 
@@ -32,18 +33,18 @@ exports.getAllHomes = async (req, res) => {
     const homes = await Home.find(filter).sort({ createdAt: -1 });
     res.json({ homes });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
-exports.getHomeById = async (req, res) => {
+exports.getHomeById = async (req, res, next) => {
   try {
     const home = await Home.findById(req.params.homeId).populate("host", "firstName lastName photo");
     if (!home) {
-      return res.status(404).json({ message: "Home not found" });
+      return next(new AppError("Home not found", 404));
     }
     res.json({ home });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };

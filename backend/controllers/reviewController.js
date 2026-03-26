@@ -1,9 +1,10 @@
 const Review = require("../models/review");
 const Booking = require("../models/booking");
 const Home = require("../models/home");
+const AppError = require("../utils/AppError");
 
 // Create a new review
-exports.createReview = async (req, res) => {
+exports.createReview = async (req, res, next) => {
   try {
     const { homeId, rating, comment } = req.body;
     const guestId = req.user.id; // auth middleware sets req.user.id
@@ -17,17 +18,16 @@ exports.createReview = async (req, res) => {
     });
 
     if (!hasValidBooking) {
-      return res.status(403).json({
-        message: "You can only review homes you have booked, securely paid for, and after your check-in date.",
-      });
+      return next(new AppError(
+        "You can only review homes you have booked, securely paid for, and after your check-in date.",
+        403
+      ));
     }
 
     // 2. Check if user already reviewed this home
     const existingReview = await Review.findOne({ homeId, guestId });
     if (existingReview) {
-      return res.status(400).json({
-        message: "You have already reviewed this home.",
-      });
+      return next(new AppError("You have already reviewed this home.", 400));
     }
 
     // 3. Create the review
@@ -47,14 +47,13 @@ exports.createReview = async (req, res) => {
     await Home.findByIdAndUpdate(homeId, { rating: averageRating });
 
     res.status(201).json({ message: "Review added successfully", review });
-  } catch (error) {
-    console.error("Error creating review:", error);
-    res.status(500).json({ message: "Server error creating review", error });
+  } catch (err) {
+    next(err);
   }
 };
 
 // Get all reviews for a specific home
-exports.getHomeReviews = async (req, res) => {
+exports.getHomeReviews = async (req, res, next) => {
   try {
     const { homeId } = req.params;
     const reviews = await Review.find({ homeId })
@@ -62,8 +61,7 @@ exports.getHomeReviews = async (req, res) => {
       .sort({ createdAt: -1 }); // Newest first
 
     res.status(200).json(reviews);
-  } catch (error) {
-    console.error("Error fetching reviews:", error);
-    res.status(500).json({ message: "Server error fetching reviews", error });
+  } catch (err) {
+    next(err);
   }
 };

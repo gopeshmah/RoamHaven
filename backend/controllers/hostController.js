@@ -1,6 +1,7 @@
 const Home = require("../models/home");
 const Booking = require("../models/booking");
 const cloudinary = require("cloudinary").v2;
+const AppError = require("../utils/AppError");
 
 const deleteImage = async (imagePath) => {
   if (!imagePath || !imagePath.includes("cloudinary.com")) return;
@@ -14,16 +15,16 @@ const deleteImage = async (imagePath) => {
   }
 };
 
-exports.getHostHomes = async (req, res) => {
+exports.getHostHomes = async (req, res, next) => {
   try {
     const homes = await Home.find({ host: req.user.id });
     res.json({ homes });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
-exports.addHome = async (req, res) => {
+exports.addHome = async (req, res, next) => {
   const { houseName, price, location, description } = req.body;
   
   // Parse coordinates if they exist (sent as JSON string from React FormData)
@@ -37,7 +38,7 @@ exports.addHome = async (req, res) => {
   }
 
   if (!req.files || req.files.length === 0) {
-    return res.status(422).json({ message: "No images provided" });
+    return next(new AppError("No images provided", 422));
   }
 
   const photos = req.files.map((file) => file.path);
@@ -56,11 +57,11 @@ exports.addHome = async (req, res) => {
     await home.save();
     res.status(201).json({ message: "Home added successfully", home });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
-exports.editHome = async (req, res) => {
+exports.editHome = async (req, res, next) => {
   const { houseName, price, location, description, existingPhotos } = req.body;
   const homeId = req.params.homeId;
   
@@ -77,7 +78,7 @@ exports.editHome = async (req, res) => {
   try {
     const home = await Home.findById(homeId);
     if (!home) {
-      return res.status(404).json({ message: "Home not found" });
+      return next(new AppError("Home not found", 404));
     }
 
     home.houseName = houseName;
@@ -111,17 +112,17 @@ exports.editHome = async (req, res) => {
     await home.save();
     res.json({ message: "Home updated successfully", home });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
-exports.deleteHome = async (req, res) => {
+exports.deleteHome = async (req, res, next) => {
   const homeId = req.params.homeId;
 
   try {
     const home = await Home.findById(homeId);
     if (!home) {
-      return res.status(404).json({ message: "Home not found" });
+      return next(new AppError("Home not found", 404));
     }
 
     // Delete photo files
@@ -132,11 +133,11 @@ exports.deleteHome = async (req, res) => {
     await Home.findByIdAndDelete(homeId);
     res.json({ message: "Home deleted successfully" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };
 
-exports.getDashboard = async (req, res) => {
+exports.getDashboard = async (req, res, next) => {
   try {
     const homes = await Home.find({ host: req.user.id });
     const totalListings = homes.length;
@@ -166,6 +167,6 @@ exports.getDashboard = async (req, res) => {
       locations,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };

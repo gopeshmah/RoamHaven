@@ -1,7 +1,8 @@
 const Message = require('../models/message');
+const AppError = require("../utils/AppError");
 
 // Get chat history for a specific room (homeId between two users)
-exports.getMessages = async (req, res) => {
+exports.getMessages = async (req, res, next) => {
   try {
     const { homeId, otherUserId } = req.params;
     const currentUserId = req.user.id;
@@ -15,14 +16,13 @@ exports.getMessages = async (req, res) => {
     }).populate("senderId", "firstName photo").sort({ createdAt: 1 }); // Oldest first for chat UI
 
     res.status(200).json(messages);
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    res.status(500).json({ message: "Server Error" });
+  } catch (err) {
+    next(err);
   }
 };
 
 // Get the user's Inbox (list of all unique conversations)
-exports.getInbox = async (req, res) => {
+exports.getInbox = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
@@ -56,8 +56,7 @@ exports.getInbox = async (req, res) => {
     });
 
     res.status(200).json(Object.values(conversations));
-  } catch (error) {
-    console.error("Error fetching inbox:", error);
-    res.status(500).json({ message: "Server Error" });
+  } catch (err) {
+    next(err);
   }
 };

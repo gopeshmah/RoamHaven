@@ -1,12 +1,13 @@
 const User = require("../models/user");
+const AppError = require("../utils/AppError");
 
 // ==================== SYNC USER ====================
 // Called by frontend after Firebase login/signup
-exports.syncUser = async (req, res) => {
+exports.syncUser = async (req, res, next) => {
   const { firebaseUid, email, firstName, lastName, userType } = req.body;
 
   if (!firebaseUid || !email) {
-    return res.status(400).json({ message: "Firebase UID and Email are required" });
+    return next(new AppError("Firebase UID and Email are required", 400));
   }
 
   try {
@@ -61,16 +62,16 @@ exports.syncUser = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ errors: [err.message] });
+    next(err);
   }
 };
 
 // ==================== GET ME ====================
-exports.getMe = async (req, res) => {
+exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found in database" });
+      return next(new AppError("User not found in database", 404));
     }
     res.json({
       user: {
@@ -83,6 +84,6 @@ exports.getMe = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    next(err);
   }
 };

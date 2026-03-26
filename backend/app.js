@@ -5,6 +5,10 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
+// Error handling
+const AppError = require("./utils/AppError");
+const errorHandler = require("./middleware/errorHandler");
+
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
 const homeRoutes = require("./routes/homeRoutes");
@@ -51,10 +55,13 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/messages", messageRoutes);
 
-// 404 handler for API
-app.use((req, res) => {
-  res.status(404).json({ message: "API route not found" });
+// 404 handler — catch any route that doesn't match above
+app.all("*", (req, res, next) => {
+  next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));
 });
+
+// Global Error Handler — must be the LAST middleware
+app.use(errorHandler);
 
 // Connect to MongoDB and start server
 const PORT = process.env.PORT || 5000;

@@ -1,19 +1,20 @@
 const Booking = require("../models/booking");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const AppError = require("../utils/AppError");
 
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-exports.createBooking = async (req, res) => {
+exports.createBooking = async (req, res, next) => {
   try {
     const { homeId, checkIn, checkOut, totalPrice } = req.body;
     const guestId = req.user.id;
 
     if (!homeId || !checkIn || !checkOut || !totalPrice) {
-      return res.status(400).json({ message: "Missing required booking fields" });
+      return next(new AppError("Missing required booking fields", 400));
     }
 
     const booking = new Booking({
@@ -28,31 +29,29 @@ exports.createBooking = async (req, res) => {
     await booking.save();
     res.status(201).json({ message: "Request sent to host successfully", booking });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error creating booking." });
+    next(err);
   }
 };
 
-exports.getMyBookings = async (req, res) => {
+exports.getMyBookings = async (req, res, next) => {
   try {
     const guestId = req.user.id;
     // Populate the home data so we can display the image/title on the bookings page
     const bookings = await Booking.find({ guestId }).populate("homeId").sort({ createdAt: -1 });
     res.status(200).json({ bookings });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error fetching bookings." });
+    next(err);
   }
 };
 
-exports.cancelBooking = async (req, res) => {
+exports.cancelBooking = async (req, res, next) => {
   try {
     const bookingId = req.params.id;
     const guestId = req.user.id;
 
     const booking = await Booking.findOne({ _id: bookingId, guestId: guestId });
     if (!booking) {
-      return res.status(404).json({ message: "Booking not found or you don't have permission to cancel it." });
+      return next(new AppError("Booking not found or you don't have permission to cancel it.", 404));
     }
 
     booking.status = "cancelled";
@@ -60,13 +59,12 @@ exports.cancelBooking = async (req, res) => {
 
     res.status(200).json({ message: "Booking cancelled successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error cancelling booking." });
+    next(err);
   }
 };
 
 // Host gets all requests for their properties
-exports.getHostRequests = async (req, res) => {
+exports.getHostRequests = async (req, res, next) => {
   try {
     const hostId = req.user.id;
 
@@ -83,28 +81,27 @@ exports.getHostRequests = async (req, res) => {
 
     res.status(200).json({ requests });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error fetching host requests." });
+    next(err);
   }
 };
 
 // Host approves or rejects a booking
-exports.updateBookingStatus = async (req, res) => {
+exports.updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
     const hostId = req.user.id;
 
     if (!["approved_pending_payment", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status update." });
+      return next(new AppError("Invalid status update.", 400));
     }
 
     const booking = await Booking.findById(id).populate("homeId");
-    if (!booking) return res.status(404).json({ message: "Booking not found." });
+    if (!booking) return next(new AppError("Booking not found.", 404));
 
     // Verify it belongs to host
     if (booking.homeId.host.toString() !== hostId) {
-       return res.status(403).json({ message: "Not authorized to update this booking." });
+       return next(new AppError("Not authorized to update this booking.", 403));
     }
 
     // Checking collision if approving: Is there already a paid_confirmed booking for these exact dates?
@@ -119,7 +116,7 @@ exports.updateBookingStatus = async (req, res) => {
           ]
        });
        if (conflictingBooking) {
-         return res.status(400).json({ message: "Cannot approve: A confirmed booking already exists for these dates." });
+         return next(new AppError("Cannot approve: A confirmed booking already exists for these dates.", 400));
        }
     }
 
@@ -128,22 +125,21 @@ exports.updateBookingStatus = async (req, res) => {
     
     res.status(200).json({ message: `Booking ${status === 'rejected' ? 'rejected' : 'approved'}.`, booking });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error updating booking status." });
+    next(err);
   }
 };
 
 // Guest creates a Razorpay order for an approved booking
-exports.createRazorpayOrder = async (req, res) => {
+exports.createRazorpayOrder = async (req, res, next) => {
   try {
     const { id } = req.params;
     const guestId = req.user.id;
 
     const booking = await Booking.findOne({ _id: id, guestId }).populate("homeId");
-    if (!booking) return res.status(404).json({ message: "Booking not found." });
+    if (!booking) return next(new AppError("Booking not found.", 404));
 
     if (booking.status !== "approved_pending_payment") {
-      return res.status(400).json({ message: "Booking is not awaiting payment." });
+      return next(new AppError("Booking is not awaiting payment.", 400));
     }
 
     const options = {
@@ -160,23 +156,22 @@ exports.createRazorpayOrder = async (req, res) => {
       currency: options.currency
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error creating Razorpay order." });
+    next(err);
   }
 };
 
 // Guest confirms successful payment (called by frontend on success handler)
-exports.confirmRazorpayPayment = async (req, res) => {
+exports.confirmRazorpayPayment = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     const guestId = req.user.id;
 
     const booking = await Booking.findOne({ _id: id, guestId });
-    if (!booking) return res.status(404).json({ message: "Booking not found." });
+    if (!booking) return next(new AppError("Booking not found.", 404));
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ message: "Missing Razorpay payment details." });
+      return next(new AppError("Missing Razorpay payment details.", 400));
     }
 
     const text = razorpay_order_id + "|" + razorpay_payment_id;
@@ -186,7 +181,7 @@ exports.confirmRazorpayPayment = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ message: "Invalid payment signature." });
+      return next(new AppError("Invalid payment signature.", 400));
     }
 
     booking.status = "paid_confirmed";
@@ -194,7 +189,6 @@ exports.confirmRazorpayPayment = async (req, res) => {
 
     res.status(200).json({ message: "Payment successful! Booking confirmed.", booking });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error confirming payment." });
+    next(err);
   }
 };

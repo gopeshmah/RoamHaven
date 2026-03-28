@@ -2,6 +2,7 @@ const Booking = require("../models/booking");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const AppError = require("../utils/AppError");
+const { sendBookingApprovedEmail, sendBookingRejectedEmail, sendPaymentConfirmationEmail } = require("../utils/sendEmail");
 
 const razorpayInstance = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -96,7 +97,7 @@ exports.updateBookingStatus = async (req, res, next) => {
       return next(new AppError("Invalid status update.", 400));
     }
 
-    const booking = await Booking.findById(id).populate("homeId");
+    const booking = await Booking.findById(id).populate("homeId").populate("guestId", "firstName email");
     if (!booking) return next(new AppError("Booking not found.", 404));
 
     // Verify it belongs to host
@@ -106,7 +107,6 @@ exports.updateBookingStatus = async (req, res, next) => {
 
     // Checking collision if approving: Is there already a paid_confirmed booking for these exact dates?
     if (status === "approved_pending_payment") {
-       // A robust check would check overlapping dates. For simplicity, we just check exact overlaps of confirmed bookings.
        const conflictingBooking = await Booking.findOne({
           homeId: booking.homeId._id,
           status: "paid_confirmed",
@@ -122,6 +122,17 @@ exports.updateBookingStatus = async (req, res, next) => {
 
     booking.status = status;
     await booking.save();
+
+    // Send email notification to the guest
+    const guestEmail = booking.guestId.email;
+    const guestName = booking.guestId.firstName;
+    const homeName = booking.homeId.houseName;
+
+    if (status === "approved_pending_payment") {
+      sendBookingApprovedEmail(guestEmail, guestName, homeName, booking.checkIn, booking.checkOut, booking.totalPrice);
+    } else if (status === "rejected") {
+      sendBookingRejectedEmail(guestEmail, guestName, homeName, booking.checkIn, booking.checkOut);
+    }
     
     res.status(200).json({ message: `Booking ${status === 'rejected' ? 'rejected' : 'approved'}.`, booking });
   } catch (err) {
@@ -167,7 +178,7 @@ exports.confirmRazorpayPayment = async (req, res, next) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     const guestId = req.user.id;
 
-    const booking = await Booking.findOne({ _id: id, guestId });
+    const booking = await Booking.findOne({ _id: id, guestId }).populate("homeId").populate("guestId");
     if (!booking) return next(new AppError("Booking not found.", 404));
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -186,6 +197,18 @@ exports.confirmRazorpayPayment = async (req, res, next) => {
 
     booking.status = "paid_confirmed";
     await booking.save();
+
+    // Send payment confirmation email to the guest
+    if (booking.guestId && booking.homeId) {
+      sendPaymentConfirmationEmail(
+        booking.guestId.email,
+        booking.guestId.firstName,
+        booking.homeId.houseName,
+        booking.checkIn,
+        booking.checkOut,
+        booking.totalPrice
+      );
+    }
 
     res.status(200).json({ message: "Payment successful! Booking confirmed.", booking });
   } catch (err) {

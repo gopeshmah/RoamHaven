@@ -26,6 +26,7 @@ const LoginPage = () => {
     setResendMessage("");
     setLoading(true);
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" }); // Always show account picker
     try {
       const result = await signInWithPopup(auth, provider);
       const res = await API.post("/auth/sync", {

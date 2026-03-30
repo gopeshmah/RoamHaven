@@ -129,13 +129,18 @@ const HomesPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
             {homes.map((home) => (
               <HomeCard key={home._id} home={home}>
-                {user?.userType !== "host" && (
-                  <Link to={`/homes/${home._id}`} className="btn-primary px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5">
+                {user?.userType !== "host" && user?.userType !== "admin" && (
+                  <Link to={`/homes/${home._id}`} className="btn-primary px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" /></svg>
                     Book Now
                   </Link>
                 )}
-                {isLoggedIn && user?.userType !== "host" && (
+                {user?.userType === "admin" && (
+                  <Link to={`/homes/${home._id}`} className="bg-gray-800 text-white hover:bg-gray-900 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer">
+                    <span className="text-sm">👁️</span> View details
+                  </Link>
+                )}
+                {isLoggedIn && user?.userType === "guest" && (
                   <button onClick={() => handleAddFavourite(home._id)} className="px-4 py-2 rounded-xl text-sm font-medium border-2 border-pink-200 text-pink-500 hover:bg-pink-50 transition-all cursor-pointer flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.765-2.085C4.006 12.553 2 10.085 2 7a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7c0 3.085-2.006 5.553-3.702 7.135a22.045 22.045 0 01-2.765 2.085 12.22 12.22 0 01-1.162.682l-.02.01-.005.003h-.002a.739.739 0 01-.69 0z" /></svg>
                     Favourite

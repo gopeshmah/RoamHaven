@@ -191,7 +191,7 @@ const HomeDetailPage = () => {
           </div>
           
           <div className="flex gap-2">
-            {isLoggedIn && (
+            {isLoggedIn && user?.userType !== "admin" && (
               <button onClick={handleAddFavourite} className="p-3 rounded-full hover:bg-pink-50 text-pink-500 transition-colors border border-pink-100 flex items-center gap-2 font-medium px-4">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.765-2.085C4.006 12.553 2 10.085 2 7a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7c0 3.085-2.006 5.553-3.702 7.135a22.045 22.045 0 01-2.765 2.085 12.22 12.22 0 01-1.162.682l-.02.01-.005.003h-.002a.739.739 0 01-.69 0z" /></svg>
                 Save
@@ -355,62 +355,72 @@ const HomeDetailPage = () => {
                 <span className="text-gray-500 text-sm font-medium pb-1">/ night</span>
               </div>
               
-              <div className="border border-gray-200 rounded-xl mb-4 relative z-50">
-                <div className="grid grid-cols-2 border-b border-gray-200">
-                  <div className="p-3 border-r border-gray-200">
-                    <p className="text-[10px] font-bold uppercase text-gray-900 mb-1">Check-in</p>
-                    <DatePicker
-                      selected={checkIn}
-                      onChange={(date) => setCheckIn(date)}
-                      selectsStart
-                      startDate={checkIn}
-                      endDate={checkOut}
-                      minDate={new Date()}
-                      placeholderText="Add date"
-                      className="w-full text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
-                    />
-                  </div>
-                  <div className="p-3">
-                    <p className="text-[10px] font-bold uppercase text-gray-900 mb-1">Check-out</p>
-                    <DatePicker
-                      selected={checkOut}
-                      onChange={(date) => setCheckOut(date)}
-                      selectsEnd
-                      startDate={checkIn}
-                      endDate={checkOut}
-                      minDate={checkIn || new Date()}
-                      placeholderText="Add date"
-                      className="w-full text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
-                    />
-                  </div>
+              {user?.userType === "admin" ? (
+                <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 mt-6 text-center">
+                  <div className="text-2xl mb-2">👁️</div>
+                  <p className="text-gray-800 font-semibold mb-1">Admin Preview</p>
+                  <p className="text-sm text-gray-500">Admins are in read-only mode. Booking is disabled.</p>
                 </div>
-                <div className="p-3">
-                  <p className="text-[10px] font-bold uppercase text-gray-900">Guests</p>
-                  <p className="text-sm text-gray-500">1 guest</p>
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="border border-gray-200 rounded-xl mb-4 relative z-50">
+                    <div className="grid grid-cols-2 border-b border-gray-200">
+                      <div className="p-3 border-r border-gray-200">
+                        <p className="text-[10px] font-bold uppercase text-gray-900 mb-1">Check-in</p>
+                        <DatePicker
+                          selected={checkIn}
+                          onChange={(date) => setCheckIn(date)}
+                          selectsStart
+                          startDate={checkIn}
+                          endDate={checkOut}
+                          minDate={new Date()}
+                          placeholderText="Add date"
+                          className="w-full text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
+                        />
+                      </div>
+                      <div className="p-3">
+                        <p className="text-[10px] font-bold uppercase text-gray-900 mb-1">Check-out</p>
+                        <DatePicker
+                          selected={checkOut}
+                          onChange={(date) => setCheckOut(date)}
+                          selectsEnd
+                          startDate={checkIn}
+                          endDate={checkOut}
+                          minDate={checkIn || new Date()}
+                          placeholderText="Add date"
+                          className="w-full text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-[10px] font-bold uppercase text-gray-900">Guests</p>
+                      <p className="text-sm text-gray-500">1 guest</p>
+                    </div>
+                  </div>
 
-              <button 
-                onClick={handleReserve} 
-                disabled={bookingLoading}
-                className="w-full btn-primary py-4 rounded-xl font-bold text-lg disabled:opacity-50 flex justify-center items-center"
-              >
-                {bookingLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Request to Book"}
-              </button>
-              
-              <p className="text-center text-gray-500 text-sm mt-4">You won't be charged yet</p>
+                  <button 
+                    onClick={handleReserve} 
+                    disabled={bookingLoading}
+                    className="w-full btn-primary py-4 rounded-xl font-bold text-lg disabled:opacity-50 flex justify-center items-center"
+                  >
+                    {bookingLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Request to Book"}
+                  </button>
+                  
+                  <p className="text-center text-gray-500 text-sm mt-4">You won't be charged yet</p>
 
-              {nights > 0 && (
-                <div className="mt-6 border-t border-gray-200 pt-4 space-y-3">
-                  <div className="flex justify-between text-gray-600">
-                    <span>₹{home.price} x {nights} nights</span>
-                    <span>₹{totalPrice}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-lg text-gray-900 pt-3 border-t border-gray-100">
-                    <span>Total</span>
-                    <span>₹{totalPrice}</span>
-                  </div>
-                </div>
+                  {nights > 0 && (
+                    <div className="mt-6 border-t border-gray-200 pt-4 space-y-3">
+                      <div className="flex justify-between text-gray-600">
+                        <span>₹{home.price} x {nights} nights</span>
+                        <span>₹{totalPrice}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-lg text-gray-900 pt-3 border-t border-gray-100">
+                        <span>Total</span>
+                        <span>₹{totalPrice}</span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

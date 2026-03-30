@@ -19,6 +19,11 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 import PaymentCancelPage from "./pages/PaymentCancelPage";
 import InboxPage from "./pages/InboxPage";
+import AdminRoute from "./components/AdminRoute";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminHomesPage from "./pages/AdminHomesPage";
+import AdminBookingsPage from "./pages/AdminBookingsPage";
 
 function App() {
   return (
@@ -51,6 +56,12 @@ function App() {
 
             {/* Chat Inbox */}
             <Route path="/inbox" element={<ProtectedRoute><InboxPage /></ProtectedRoute>} />
+
+            {/* Protected Admin Routes */}
+            <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+            <Route path="/admin/homes" element={<AdminRoute><AdminHomesPage /></AdminRoute>} />
+            <Route path="/admin/bookings" element={<AdminRoute><AdminBookingsPage /></AdminRoute>} />
 
             {/* 404 */}
             <Route path="*" element={<NotFoundPage />} />

@@ -83,6 +83,14 @@ const Navbar = () => {
                   )}
                 </>
               )}
+
+              {isLoggedIn && user?.userType === "admin" && (
+                <>
+                  {navLink("/admin/dashboard", "Admin Portal",
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /></svg>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
@@ -145,6 +153,14 @@ const Navbar = () => {
                       <Link to="/host/requests" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Requests</Link>
                       <Link to="/host/homes" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">My Listings</Link>
                       <Link to="/host/add-home" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Add Listing</Link>
+                    </>
+                  )}
+                  {isLoggedIn && user?.userType === "admin" && (
+                    <>
+                      <Link to="/admin/dashboard" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /></svg>
+                        Admin Portal
+                      </Link>
                     </>
                   )}
                   <div className="border-t border-white/15 mt-2 pt-2">

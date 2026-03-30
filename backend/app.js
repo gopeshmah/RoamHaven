@@ -17,6 +17,7 @@ const favouriteRoutes = require("./routes/favouriteRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -54,6 +55,7 @@ app.use("/api/favourites", favouriteRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/admin", adminRoutes);
 
 // 404 handler — catch any route that doesn't match above
 app.all("*", (req, res, next) => {

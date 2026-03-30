@@ -46,3 +46,15 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+/* 
+  1. CENTRAL AUTH STATE: Manages the global 'user' and 'loading' states, 
+     providing authentication data to every component in the app.
+  
+  2. SESSION PERSISTENCE: Uses Firebase's onAuthStateChanged to automatically 
+     detect and restore the user's session from local storage on page reloads.
+  
+  3. DATA SYNCHRONIZATION: Bridges Firebase and MongoDB by automatically 
+     fetching the user's full database profile (including userType) whenever 
+     a valid Firebase session is detected.
+*/
+

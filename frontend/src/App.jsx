@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { SocketProvider } from "./context/SocketContext";
 import Navbar from "./components/Navbar";
@@ -30,6 +31,27 @@ function App() {
     <AuthProvider>
       <SocketProvider>
         <Router>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                borderRadius: '12px',
+                padding: '14px 20px',
+                fontSize: '14px',
+                fontWeight: '500',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+              },
+              success: {
+                iconTheme: { primary: '#0d9488', secondary: '#fff' },
+                style: { border: '1px solid #ccfbf1' },
+              },
+              error: {
+                iconTheme: { primary: '#ef4444', secondary: '#fff' },
+                style: { border: '1px solid #fee2e2' },
+              },
+            }}
+          />
           <div className="min-h-screen bg-gray-50">
           <Navbar />
           <Routes>

@@ -4,6 +4,7 @@ import API from "../api/axios";
 import HomeCard from "../components/HomeCard";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 const HomesPage = () => {
   const [homes, setHomes] = useState([]);
@@ -50,9 +51,9 @@ const HomesPage = () => {
   const handleAddFavourite = async (homeId) => {
     try {
       await API.post(`/favourites/${homeId}`);
-      alert("Added to favourites! ❤️");
+      toast.success("Added to favourites! ❤️");
     } catch (err) {
-      alert(err.response?.data?.message || "Please login to add favourites");
+      toast.error(err.response?.data?.message || "Please login to add favourites");
     }
   };
 

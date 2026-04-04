@@ -1,4 +1,5 @@
 const Booking = require("../models/booking");
+const Home = require("../models/home");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const AppError = require("../utils/AppError");
@@ -11,19 +12,42 @@ const razorpayInstance = new Razorpay({
 
 exports.createBooking = async (req, res, next) => {
   try {
-    const { homeId, checkIn, checkOut, totalPrice } = req.body;
+    const { homeId, checkIn, checkOut, guests } = req.body;
     const guestId = req.user.id;
 
-    if (!homeId || !checkIn || !checkOut || !totalPrice) {
+    if (!homeId || !checkIn || !checkOut) {
       return next(new AppError("Missing required booking fields", 400));
     }
+
+    // Server-side price recalculation — never trust client-sent price
+    const home = await Home.findById(homeId);
+    if (!home) {
+      return next(new AppError("Home not found", 404));
+    }
+
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
+    if (nights <= 0) {
+      return next(new AppError("Check-out date must be after check-in date", 400));
+    }
+
+    // Validate guest count
+    const guestCount = Number(guests) || 1;
+    if (guestCount < 1 || guestCount > (home.maxGuests || 16)) {
+      return next(new AppError(`Guest count must be between 1 and ${home.maxGuests || 16}`, 400));
+    }
+
+    const totalPrice = nights * home.price;
 
     const booking = new Booking({
       homeId,
       guestId,
-      checkIn,
-      checkOut,
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
       totalPrice,
+      guests: guestCount,
       status: "pending"
     });
 

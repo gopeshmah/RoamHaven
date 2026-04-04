@@ -3,13 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import toast from "react-hot-toast";
 
 const AddEditHomePage = () => {
   const { homeId } = useParams();
   const navigate = useNavigate();
   const isEditing = !!homeId;
 
-  const [formData, setFormData] = useState({ houseName: "", price: "", location: "", description: "" });
+  const [formData, setFormData] = useState({ houseName: "", price: "", location: "", description: "", maxGuests: "1" });
   const [coordinates, setCoordinates] = useState({ lat: 28.6139, lng: 77.2090 }); // Default to New Delhi
   const [searchQuery, setSearchQuery] = useState("");
   const [photos, setPhotos] = useState([]); // Array of File objects for newly selected photos
@@ -23,7 +24,7 @@ const AddEditHomePage = () => {
       API.get(`/homes/${homeId}`)
         .then((res) => {
           const h = res.data.home;
-          setFormData({ houseName: h.houseName, price: h.price, location: h.location, description: h.description || "" });
+          setFormData({ houseName: h.houseName, price: h.price, location: h.location, description: h.description || "", maxGuests: h.maxGuests || "1" });
           if (h.coordinates?.lat && h.coordinates?.lng) {
             setCoordinates(h.coordinates);
             if (mapRef.current) mapRef.current.setView([h.coordinates.lat, h.coordinates.lng], 13);
@@ -96,7 +97,7 @@ const AddEditHomePage = () => {
         if (mapRef.current) mapRef.current.setView([newCoords.lat, newCoords.lng], 14);
         setFormData(prev => ({ ...prev, location: display_name.split(",").slice(0, 3).join(",") }));
       } else {
-        alert("Location not found. Try a different search term.");
+        toast.error("Location not found. Try a different search term.");
       }
     } catch (err) {
       console.error("Search failed", err);
@@ -105,7 +106,7 @@ const AddEditHomePage = () => {
 
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      toast.error("Geolocation is not supported by your browser");
       return;
     }
     
@@ -129,7 +130,7 @@ const AddEditHomePage = () => {
           .catch(err => console.error("Reverse geocoding failed", err));
       },
       (error) => {
-        alert("Unable to retrieve your location. Please check your browser permissions.");
+        toast.error("Unable to retrieve your location. Please check your browser permissions.");
         console.error("Geolocation error:", error);
       }
     );
@@ -189,6 +190,15 @@ const AddEditHomePage = () => {
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Price / Night (₹)</label>
               <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="2500" className="w-full px-4 py-3 rounded-xl input-field" required />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Max Guests</label>
+              <select name="maxGuests" value={formData.maxGuests} onChange={handleChange} className="w-full px-4 py-3 rounded-xl input-field cursor-pointer">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 16].map(n => (
+                  <option key={n} value={n}>{n} {n === 1 ? 'guest' : 'guests'}</option>
+                ))}
+              </select>
             </div>
 
             <div className="mb-4">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -14,6 +15,7 @@ const HomeDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
+  const [guests, setGuests] = useState(1);
   const [bookingLoading, setBookingLoading] = useState(false);
   
   // Review state
@@ -43,28 +45,28 @@ const HomeDetailPage = () => {
   const handleAddFavourite = async () => {
     try {
       if (!isLoggedIn) {
-        alert("Please login to save favourites");
+        toast.error("Please login to save favourites");
         return navigate("/login");
       }
       await API.post(`/favourites/${homeId}`);
-      alert("Added to favourites! ❤️");
+      toast.success("Added to favourites! ❤️");
     } catch (err) {
-      alert("Failed to add to favourites");
+      toast.error("Failed to add to favourites");
     }
   };
 
   const handleReserve = async () => {
     if (!isLoggedIn) {
-      alert("Please login to book a stay.");
+      toast.error("Please login to book a stay.");
       navigate("/login");
       return;
     }
     if (!checkIn || !checkOut) {
-      alert("Please select both check-in and check-out dates.");
+      toast.error("Please select both check-in and check-out dates.");
       return;
     }
     if (nights <= 0) {
-      alert("Check-out must be after Check-in.");
+      toast.error("Check-out must be after Check-in.");
       return;
     }
 
@@ -74,13 +76,13 @@ const HomeDetailPage = () => {
         homeId: home._id,
         checkIn,
         checkOut,
-        totalPrice
+        guests
       });
-      alert("Request sent to host successfully! 🎉");
+      toast.success("Request sent to host successfully! 🎉");
       navigate("/bookings"); // Redirect to their bookings page
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to create booking");
+      toast.error(err.response?.data?.message || "Failed to create booking");
     } finally {
       setBookingLoading(false);
     }
@@ -89,7 +91,7 @@ const HomeDetailPage = () => {
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      alert("Please login to leave a review.");
+      toast.error("Please login to leave a review.");
       navigate("/login");
       return;
     }
@@ -101,7 +103,7 @@ const HomeDetailPage = () => {
         rating: reviewRating,
         comment: reviewComment
       });
-      alert("Review submitted successfully!");
+      toast.success("Review submitted successfully!");
       
       // Fetch fresh reviews to get the populated user data
       const refreshRes = await API.get(`/reviews/${homeId}`);
@@ -117,7 +119,7 @@ const HomeDetailPage = () => {
          setHome({...home, rating: newAvg.toFixed(1) });
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to submit review");
+      toast.error(err.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmittingReview(false);
     }
@@ -393,8 +395,16 @@ const HomeDetailPage = () => {
                       </div>
                     </div>
                     <div className="p-3">
-                      <p className="text-[10px] font-bold uppercase text-gray-900">Guests</p>
-                      <p className="text-sm text-gray-500">1 guest</p>
+                      <p className="text-[10px] font-bold uppercase text-gray-900 mb-1">Guests</p>
+                      <select
+                        value={guests}
+                        onChange={(e) => setGuests(Number(e.target.value))}
+                        className="w-full text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
+                      >
+                        {Array.from({ length: home.maxGuests || 1 }, (_, i) => i + 1).map(n => (
+                          <option key={n} value={n}>{n} {n === 1 ? 'guest' : 'guests'}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

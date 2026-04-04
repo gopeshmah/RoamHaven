@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import API from "../api/axios";
 import { format } from "date-fns";
+import toast from "react-hot-toast";
 
 const HostBookingsPage = () => {
   const [requests, setRequests] = useState([]);
@@ -30,12 +31,12 @@ const HostBookingsPage = () => {
         prev.map((req) => (req._id === id ? { ...req, status } : req))
       );
       if (status === "approved_pending_payment") {
-         alert("Request approved! The guest has been notified to make the payment.");
+         toast.success("Request approved! The guest has been notified to make the payment.");
       } else {
-         alert("Request rejected.");
+         toast.success("Request rejected.");
       }
     } catch (err) {
-      alert(err.response?.data?.message || `Failed to update booking status.`);
+      toast.error(err.response?.data?.message || "Failed to update booking status.");
     }
   };
 

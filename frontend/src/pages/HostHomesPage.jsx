@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../api/axios";
 import HomeCard from "../components/HomeCard";
+import toast from "react-hot-toast";
 
 const HostHomesPage = () => {
   const [homes, setHomes] = useState([]);
@@ -20,7 +21,7 @@ const HostHomesPage = () => {
       await API.delete(`/host/delete-home/${homeId}`);
       setHomes(homes.filter((h) => h._id !== homeId));
     } catch (err) {
-      alert("Failed to delete");
+      toast.error("Failed to delete");
     }
   };
 

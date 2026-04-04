@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import API from "../api/axios";
 import { format } from "date-fns";
+import toast from "react-hot-toast";
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     const script = document.createElement("script");
@@ -38,10 +39,10 @@ const BookingsPage = () => {
     if (!window.confirm("Are you sure you want to cancel this booking?")) return;
     try {
       await API.delete(`/bookings/${bookingId}`);
-      alert("Booking cancelled successfully.");
+      toast.success("Booking cancelled successfully.");
       fetchBookings();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to cancel booking");
+      toast.error(err.response?.data?.message || "Failed to cancel booking");
     }
   };
 
@@ -50,7 +51,7 @@ const BookingsPage = () => {
       setPaymentProcessing(true);
       const res = await loadRazorpayScript();
       if (!res) {
-        alert("Razorpay SDK failed to load. Are you online?");
+        toast.error("Razorpay SDK failed to load. Are you online?");
         setPaymentProcessing(false);
         return;
       }
@@ -58,7 +59,7 @@ const BookingsPage = () => {
       // Create Order
       const result = await API.post(`/bookings/${booking._id}/create-razorpay-order`);
       if (!result) {
-        alert("Server error. Please check if you are online.");
+        toast.error("Server error. Please check if you are online.");
         setPaymentProcessing(false);
         return;
       }
@@ -81,7 +82,7 @@ const BookingsPage = () => {
             });
             window.location.href = `/payment-success?booking_id=${booking._id}&type=razorpay`;
           } catch (err) {
-            alert(err.response?.data?.message || "Payment verification failed.");
+            toast.error(err.response?.data?.message || "Payment verification failed.");
           }
         },
         prefill: {
@@ -96,13 +97,13 @@ const BookingsPage = () => {
 
       const paymentObject = new window.Razorpay(options);
       paymentObject.on("payment.failed", function (response) {
-        alert("Payment Failed. " + response.error.description);
+        toast.error("Payment Failed. " + response.error.description);
       });
       paymentObject.open();
 
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Payment sequence failed. Please try again.");
+      toast.error(err.response?.data?.message || "Payment sequence failed. Please try again.");
     } finally {
       setPaymentProcessing(false);
     }

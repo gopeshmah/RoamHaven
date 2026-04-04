@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import API from "../api/axios";
 import HomeCard from "../components/HomeCard";
+import toast from "react-hot-toast";
 
 const FavouritesPage = () => {
   const [favourites, setFavourites] = useState([]);
@@ -19,7 +20,7 @@ const FavouritesPage = () => {
       await API.delete(`/favourites/${homeId}`);
       setFavourites(favourites.filter((fav) => fav._id !== homeId));
     } catch (err) {
-      alert("Failed to remove");
+      toast.error("Failed to remove");
     }
   };
 

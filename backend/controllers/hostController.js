@@ -25,7 +25,7 @@ exports.getHostHomes = async (req, res, next) => {
 };
 
 exports.addHome = async (req, res, next) => {
-  const { houseName, price, location, description } = req.body;
+  const { houseName, price, location, description, maxGuests } = req.body;
   
   // Parse coordinates if they exist (sent as JSON string from React FormData)
   let coordinates = {};
@@ -50,6 +50,7 @@ exports.addHome = async (req, res, next) => {
       location,
       coordinates,
       rating: 0, // Default to 0 for a new home
+      maxGuests: Number(maxGuests) || 1,
       photos,
       description,
       host: req.user.id,
@@ -62,7 +63,7 @@ exports.addHome = async (req, res, next) => {
 };
 
 exports.editHome = async (req, res, next) => {
-  const { houseName, price, location, description, existingPhotos } = req.body;
+  const { houseName, price, location, description, existingPhotos, maxGuests } = req.body;
   const homeId = req.params.homeId;
   
   // Parse coordinates if they exist
@@ -88,6 +89,7 @@ exports.editHome = async (req, res, next) => {
       home.coordinates = coordinates;
     }
     home.description = description;
+    home.maxGuests = Number(maxGuests) || home.maxGuests || 1;
 
     // existingPhotos from frontend might be a string (if 1) or array (if multiple)
     let retainedPhotos = [];

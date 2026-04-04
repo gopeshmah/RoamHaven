@@ -78,7 +78,7 @@ const sendBookingApprovedEmail = (guestEmail, guestName, homeName, checkIn, chec
 
           <!-- CTA Button -->
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/bookings" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
+            <a href="${process.env.CLIENT_URL}/bookings" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
               Complete Payment →
             </a>
           </div>
@@ -127,7 +127,7 @@ const sendBookingRejectedEmail = (guestEmail, guestName, homeName, checkIn, chec
 
           <!-- CTA Button -->
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/homes" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
+            <a href="${process.env.CLIENT_URL}/homes" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
               Explore Other Homes →
             </a>
           </div>
@@ -189,7 +189,7 @@ const sendPaymentConfirmationEmail = (guestEmail, guestName, homeName, checkIn, 
 
           <!-- CTA Button -->
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/bookings" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
+            <a href="${process.env.CLIENT_URL}/bookings" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px; display: inline-block;">
               View My Trips →
             </a>
           </div>

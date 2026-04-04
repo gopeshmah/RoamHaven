@@ -15,7 +15,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     // Only connect if the user is authenticated and data is loaded
     if (isLoggedIn && user) {
-      const newSocket = io("http://localhost:5000", {
+      const newSocket = io(import.meta.env.VITE_API_URL, {
         withCredentials: true,
       });
 

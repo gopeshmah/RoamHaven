@@ -4,7 +4,7 @@ const Message = require("./models/message");
 const setupSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:5173", // React app
+      origin: process.env.CLIENT_URL,
       methods: ["GET", "POST"],
       credentials: true,
     },

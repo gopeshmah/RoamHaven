@@ -158,9 +158,9 @@ const AddEditHomePage = () => {
 
     try {
       if (isEditing) {
-        await API.put(`/host/edit-home/${homeId}`, data, { headers: { "Content-Type": "multipart/form-data" } });
+        await API.put(`/host/edit-home/${homeId}`, data);
       } else {
-        await API.post("/host/add-home", data, { headers: { "Content-Type": "multipart/form-data" } });
+        await API.post("/host/add-home", data);
       }
       navigate("/host/homes");
     } catch (err) {

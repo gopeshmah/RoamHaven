@@ -98,6 +98,12 @@ const BookingsPage = () => {
       const paymentObject = new window.Razorpay(options);
       paymentObject.on("payment.failed", function (response) {
         toast.error("Payment Failed. " + response.error.description);
+        // Refresh bookings in case status changed on the server
+        fetchBookings();
+      });
+      paymentObject.on("payment.dismissed", function () {
+        // User closed the popup — refresh to check actual status
+        fetchBookings();
       });
       paymentObject.open();
 

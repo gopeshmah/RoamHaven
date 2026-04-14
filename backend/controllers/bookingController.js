@@ -173,8 +173,36 @@ exports.createRazorpayOrder = async (req, res, next) => {
     const booking = await Booking.findOne({ _id: id, guestId }).populate("homeId");
     if (!booking) return next(new AppError("Booking not found.", 404));
 
+    if (booking.status === "paid_confirmed") {
+      return next(new AppError("This booking is already paid.", 400));
+    }
+
     if (booking.status !== "approved_pending_payment") {
       return next(new AppError("Booking is not awaiting payment.", 400));
+    }
+
+    // If an order was already created, reuse it instead of creating a duplicate
+    if (booking.razorpayOrderId) {
+      try {
+        const existingOrder = await razorpayInstance.orders.fetch(booking.razorpayOrderId);
+        // If order is still in "created" or "attempted" state, reuse it
+        if (existingOrder && (existingOrder.status === "created" || existingOrder.status === "attempted")) {
+          return res.status(200).json({
+            orderId: existingOrder.id,
+            amount: existingOrder.amount,
+            currency: existingOrder.currency,
+          });
+        }
+        // If order is "paid", the payment already went through — update booking
+        if (existingOrder && existingOrder.status === "paid") {
+          booking.status = "paid_confirmed";
+          await booking.save();
+          return next(new AppError("This booking is already paid. Please refresh the page.", 400));
+        }
+      } catch (fetchErr) {
+        // If we can't fetch the old order, create a new one
+        console.warn("Could not fetch existing Razorpay order, creating new one:", fetchErr.message);
+      }
     }
 
     const options = {
@@ -184,6 +212,10 @@ exports.createRazorpayOrder = async (req, res, next) => {
     };
 
     const order = await razorpayInstance.orders.create(options);
+
+    // Save the order ID on the booking for future reference
+    booking.razorpayOrderId = order.id;
+    await booking.save();
 
     res.status(200).json({ 
       orderId: order.id, 

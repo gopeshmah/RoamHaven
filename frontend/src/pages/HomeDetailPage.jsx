@@ -153,22 +153,37 @@ const HomeDetailPage = () => {
         {/* Image Gallery */}
         <div className="mb-8 rounded-2xl overflow-hidden shadow-sm">
           {home.photos && home.photos.length > 1 ? (
-            <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 h-[400px] md:h-[500px] gap-2">
-              {/* Main big image */}
-              <div className="md:col-span-2 md:row-span-2 relative h-full group overflow-hidden">
-                <img src={home.photos[0]} alt={`${home.houseName} 1`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer" />
+            <>
+              {/* Mobile: Horizontal scrollable gallery */}
+              <div className="md:hidden flex overflow-x-auto snap-x snap-mandatory gap-2 h-[300px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+                <style>{`.md\\:hidden::-webkit-scrollbar { display: none; }`}</style>
+                {home.photos.map((photo, index) => (
+                  <div key={index} className="flex-shrink-0 w-[85%] snap-center relative h-full group overflow-hidden rounded-xl">
+                    <img src={photo} alt={`${home.houseName} ${index + 1}`} className="w-full h-full object-cover" />
+                    <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      {index + 1} / {home.photos.length}
+                    </div>
+                  </div>
+                ))}
               </div>
-              {/* 4 small images */}
-              {home.photos.slice(1, 5).map((photo, index) => (
-                <div key={index} className="hidden md:block relative h-full group overflow-hidden">
-                  <img src={photo} alt={`${home.houseName} ${index + 2}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer" />
+              {/* Desktop: Grid layout */}
+              <div className="hidden md:grid md:grid-cols-4 md:grid-rows-2 h-[500px] gap-2">
+                {/* Main big image */}
+                <div className="md:col-span-2 md:row-span-2 relative h-full group overflow-hidden">
+                  <img src={home.photos[0]} alt={`${home.houseName} 1`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer" />
                 </div>
-              ))}
-              {/* If fewer than 5 photos, fill remaining areas with a gradient placeholder so grid doesn't break */}
-              {Array.from({ length: 4 - (home.photos.length - 1) }).map((_, i) => (
-                 <div key={`filler-${i}`} className="hidden md:block relative h-full bg-teal-50"></div>
-              ))}
-            </div>
+                {/* 4 small images */}
+                {home.photos.slice(1, 5).map((photo, index) => (
+                  <div key={index} className="relative h-full group overflow-hidden">
+                    <img src={photo} alt={`${home.houseName} ${index + 2}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer" />
+                  </div>
+                ))}
+                {/* If fewer than 5 photos, fill remaining areas with a gradient placeholder so grid doesn't break */}
+                {home.photos.length < 5 && Array.from({ length: 5 - home.photos.length }).map((_, i) => (
+                   <div key={`filler-${i}`} className="relative h-full bg-teal-50"></div>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="relative h-64 md:h-[400px] w-full">
               <img src={home.photos && home.photos.length > 0 ? home.photos[0] : "/placeholder.jpg"} alt={home.houseName} className="w-full h-full object-cover" />

@@ -1,12 +1,36 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSocket } from "../context/SocketContext";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
   const { user, isLoggedIn, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const socket = useSocket();
+
+  // Global Message Listener
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleGlobalMessageNotification = () => {
+      // Only show the popup if the user is NOT already on the inbox page
+      if (location.pathname !== "/inbox") {
+        toast.success("You received a new message!", {
+          icon: '💬',
+          duration: 4000,
+        });
+      }
+    };
+
+    socket.on("new_message_notification", handleGlobalMessageNotification);
+
+    return () => {
+      socket.off("new_message_notification", handleGlobalMessageNotification);
+    };
+  }, [socket, location.pathname]);
 
   const handleLogout = () => {
     logout();

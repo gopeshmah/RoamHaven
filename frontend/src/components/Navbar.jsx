@@ -169,6 +169,7 @@ const Navbar = () => {
                       <Link to="/homes" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Explore</Link>
                       <Link to="/favourites" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Favourites</Link>
                       <Link to="/bookings" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Bookings</Link>
+                      <Link to="/inbox" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Messages</Link>
                     </>
                   )}
                   {isLoggedIn && user?.userType === "host" && (
@@ -177,6 +178,7 @@ const Navbar = () => {
                       <Link to="/host/requests" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Requests</Link>
                       <Link to="/host/homes" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">My Listings</Link>
                       <Link to="/host/add-home" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Add Listing</Link>
+                      <Link to="/inbox" onClick={() => setMobileOpen(false)} className="py-2.5 px-4 rounded-xl text-white/90 hover:bg-white/15 text-sm font-medium">Messages</Link>
                     </>
                   )}
                   {isLoggedIn && user?.userType === "admin" && (

@@ -23,13 +23,14 @@ const HostBookingsPage = () => {
     }
   };
 
+  const [updatingId, setUpdatingId] = useState(null);
+
   const handleUpdateStatus = async (id, status) => {
     try {
+      setUpdatingId(id);
       await API.put(`/bookings/${id}/status`, { status });
-      // update local state to reflect change without refetching immediately
-      setRequests((prev) =>
-        prev.map((req) => (req._id === id ? { ...req, status } : req))
-      );
+      // Refetch from server to guarantee correct state (email sending adds delay)
+      await fetchRequests();
       if (status === "approved_pending_payment") {
          toast.success("Request approved! The guest has been notified to make the payment.");
       } else {
@@ -37,6 +38,8 @@ const HostBookingsPage = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update booking status.");
+    } finally {
+      setUpdatingId(null);
     }
   };
 

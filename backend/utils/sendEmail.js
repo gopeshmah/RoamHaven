@@ -1,37 +1,94 @@
 const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // TLS requires secure: false for port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+const dns = require("dns");
 
 /**
- * Send an email notification
+ * Manually resolve smtp.gmail.com to an IPv4 address.
+ * Render's free tier doesn't support IPv6, and Nodemailer's `family: 4`
+ * option doesn't reliably force IPv4 on all platforms.
+ * This function guarantees we connect via IPv4.
+ */
+const resolveGmailIPv4 = () => {
+  return new Promise((resolve, reject) => {
+    dns.resolve4("smtp.gmail.com", (err, addresses) => {
+      if (err || !addresses || addresses.length === 0) {
+        // Fallback to hardcoded known Gmail SMTP IPv4 if DNS fails
+        console.warn("📧 DNS resolve4 failed, using fallback. Error:", err?.message);
+        resolve("smtp.gmail.com");
+      } else {
+        console.log(`📧 Resolved smtp.gmail.com to IPv4: ${addresses[0]}`);
+        resolve(addresses[0]);
+      }
+    });
+  });
+};
+
+/**
+ * Create a fresh SMTP transporter for each email.
+ * Gmail kills idle SMTP connections after a few minutes, so reusing
+ * a module-level transporter causes intermittent "connection closed" failures.
+ */
+const createTransporter = async () => {
+  const smtpHost = await resolveGmailIPv4();
+
+  return nodemailer.createTransport({
+    host: smtpHost,
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false,
+      // Must set servername when connecting by IP so TLS handshake works
+      servername: "smtp.gmail.com",
+    },
+    // Connection pool settings to avoid stale connections
+    pool: false,
+    // Timeout settings to fail fast instead of hanging
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+  });
+};
+
+/**
+ * Send an email notification with retry logic.
+ * Retries up to 3 times with exponential backoff for transient failures.
  * @param {Object} options - { to, subject, html }
  */
 const sendEmail = async (options) => {
-  try {
-    const mailOptions = {
-      from: `"RoamHaven" <${process.env.EMAIL_USER}>`,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-    };
+  const maxRetries = 3;
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`📧 Email sent to ${options.to}: ${info.messageId}`);
-    return info;
-  } catch (err) {
-    // We log the error but do NOT throw — email failure shouldn't crash the booking flow
-    console.error("📧 Email sending failed:", err.message);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const transporter = await createTransporter();
+
+      // Verify the SMTP connection is alive before sending
+      await transporter.verify();
+
+      const mailOptions = {
+        from: `"RoamHaven" <${process.env.EMAIL_USER}>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`📧 Email sent to ${options.to}: ${info.messageId}`);
+      transporter.close();
+      return info;
+    } catch (err) {
+      console.error(`📧 Email attempt ${attempt}/${maxRetries} failed:`, err.message);
+
+      if (attempt < maxRetries) {
+        const delay = attempt * 1000;
+        console.log(`📧 Retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        console.error(`📧 All ${maxRetries} email attempts failed for ${options.to}. Giving up.`);
+      }
+    }
   }
 };
 

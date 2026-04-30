@@ -147,18 +147,21 @@ exports.updateBookingStatus = async (req, res, next) => {
     booking.status = status;
     await booking.save();
 
-    // Send email notification to the guest
+    // Send response immediately — don't make the frontend wait for email
+    res.status(200).json({ message: `Booking ${status === 'rejected' ? 'rejected' : 'approved'}.`, booking });
+
+    // Fire email in the background (no await — runs after response is sent)
     const guestEmail = booking.guestId.email;
     const guestName = booking.guestId.firstName;
     const homeName = booking.homeId.houseName;
 
     if (status === "approved_pending_payment") {
-      sendBookingApprovedEmail(guestEmail, guestName, homeName, booking.checkIn, booking.checkOut, booking.totalPrice);
+      sendBookingApprovedEmail(guestEmail, guestName, homeName, booking.checkIn, booking.checkOut, booking.totalPrice)
+        .catch(err => console.error("📧 Approval email failed:", err.message));
     } else if (status === "rejected") {
-      sendBookingRejectedEmail(guestEmail, guestName, homeName, booking.checkIn, booking.checkOut);
+      sendBookingRejectedEmail(guestEmail, guestName, homeName, booking.checkIn, booking.checkOut)
+        .catch(err => console.error("📧 Rejection email failed:", err.message));
     }
-    
-    res.status(200).json({ message: `Booking ${status === 'rejected' ? 'rejected' : 'approved'}.`, booking });
   } catch (err) {
     next(err);
   }
@@ -254,7 +257,10 @@ exports.confirmRazorpayPayment = async (req, res, next) => {
     booking.status = "paid_confirmed";
     await booking.save();
 
-    // Send payment confirmation email to the guest
+    // Send response immediately
+    res.status(200).json({ message: "Payment successful! Booking confirmed.", booking });
+
+    // Fire email in the background
     if (booking.guestId && booking.homeId) {
       sendPaymentConfirmationEmail(
         booking.guestId.email,
@@ -263,10 +269,8 @@ exports.confirmRazorpayPayment = async (req, res, next) => {
         booking.checkIn,
         booking.checkOut,
         booking.totalPrice
-      );
+      ).catch(err => console.error("📧 Payment email failed:", err.message));
     }
-
-    res.status(200).json({ message: "Payment successful! Booking confirmed.", booking });
   } catch (err) {
     next(err);
   }
